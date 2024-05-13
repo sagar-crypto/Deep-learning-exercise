@@ -7,7 +7,7 @@ class FullyConnected(Base.BaseLayer):
         self.trainable = True
         self.input_size = input_size
         self.output_size = output_size
-        #TODO Correct shape? Goal: input_size Rows * output_size columns
+        # Shape: (according to task) input_size + 1 bias rows, output_size columns
         # input_size + 1 to add another row for the bias, such that each batch has an additional parameter "bias"   
         self.weights = np.random.uniform(0,1,(self.input_size +1, self.output_size))
         self._optimizer = None
@@ -62,5 +62,5 @@ class FullyConnected(Base.BaseLayer):
         else:
             print("No Optimizer is set!")
         
-        # Removing the additional row used for the bias
+        # Removing the additional colummn used for the bias
         return grad_X[:,:-1]

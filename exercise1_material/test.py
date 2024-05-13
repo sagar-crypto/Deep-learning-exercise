@@ -4,7 +4,7 @@ import numpy as np
 [1,2,3,4]
 
 # 4 Samples, 20 features each
-input_tensor = np.random.uniform(0,1,(4,20))
+input_tensor = np.random.uniform(0,1,size=(2,10))
 
 #ones = np.ones(shape=(input_tensor.shape[0],1))
 ones = np.ones((1, input_tensor.shape[0])).T
@@ -15,3 +15,4 @@ fuckthisshit = np.hstack((input_tensor, ones))
 anothershit = np.concatenate((input_tensor, ones), axis=1)
 
 print(fuckthisshit.shape)
+print(input_tensor)
