@@ -5,9 +5,11 @@ class FullyConnected(Base.BaseLayer):
     def __init__(self, input_size, output_size):
         super().__init__()
         self.trainable = True
+        self.input_size = input_size
+        self.output_size = output_size
         #TODO Correct shape? Goal: input_size Rows * output_size columns
-        # input_size + 1 to add another column for the bias, such that each batch has an additional parameter "bias"   
-        self.weights = np.random.uniform(0,1,(input_size, output_size + 1))
+        # input_size + 1 to add another row for the bias, such that each batch has an additional parameter "bias"   
+        self.weights = np.random.uniform(0,1,(self.input_size +1, self.output_size))
         self._optimizer = None
         self.current_input = None
         
@@ -21,7 +23,9 @@ class FullyConnected(Base.BaseLayer):
         self.current_input = np.hstack((input_tensor, ones))
         # To get output shape (rows: batch_size, columns: input_size*weights), we have to transpose the input tensor
         #return self.weights @ input_tensor.T
-        return self.current_input @ self.weights.T
+        #return self.weights @ self.current_input
+        return self.current_input @ self.weights
+    
     
     @property
     def optimizer(self):
@@ -57,4 +61,6 @@ class FullyConnected(Base.BaseLayer):
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
         else:
             print("No Optimizer is set!")
-        return grad_X
+        
+        # Removing the additional row used for the bias
+        return grad_X[:,:-1]
