@@ -1,4 +1,4 @@
-import Base
+from . import Base
 import numpy as np
 
 class FullyConnected(Base.BaseLayer):
