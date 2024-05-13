@@ -1,8 +1,8 @@
-from Base import BaseLayer
 import numpy as np
+from . import Base
 
 
-class SoftMax:
+class SoftMax(Base.BaseLayer):
     def __init__(self):
         super().__init__()
         self.outwards_tensor = None

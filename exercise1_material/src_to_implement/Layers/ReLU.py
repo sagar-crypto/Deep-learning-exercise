@@ -1,8 +1,8 @@
-from Base import BaseLayer
 import numpy as np
+from . import Base
 
 
-class ReLU:
+class ReLU (Base.BaseLayer):
     def __init__(self) -> None:
         super().__init__()
         self.outward_tensor = None
