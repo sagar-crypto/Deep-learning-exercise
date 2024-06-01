@@ -23,7 +23,7 @@ class Xavier:
     def initialize(self, weights_shape, fan_in, fan_out):
         sigma = np.sqrt(2/(fan_in+fan_out))
         
-        return np.full(weights_shape,sigma)
+        return np.random.normal(scale = sigma,size = weights_shape)
             
 
 class He:
@@ -33,4 +33,4 @@ class He:
     def initialize(self, weights_shape, fan_in, fan_out):
         sigma = np.sqrt(2/fan_in)
         
-        return np.full(weights_shape,sigma)
+        return np.random.normal(scale = sigma,size = weights_shape)
