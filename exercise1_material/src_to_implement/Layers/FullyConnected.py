@@ -13,7 +13,6 @@ class FullyConnected(Base.BaseLayer):
         self._optimizer = None
         self.current_input = None
         
-        
     def forward(self, input_tensor):
         # Shape input_tensor: (rows: batch_size, columns: input_size)
         # Shape weights: (rows: inputs, columns: outputs)
@@ -64,3 +63,13 @@ class FullyConnected(Base.BaseLayer):
         
         # Removing the additional colummn used for the bias
         return grad_X[:,:-1]
+    
+    
+    def initialize(self, weights_initializer, bias_initializer):
+        self.weights = weights_initializer
+        bias = bias_initializer
+        
+        # Adding the bias to the weights matrix as required by the task
+        # TODO: Possible error: Are the weights added in the right dimension (horizontally/vertically)?
+        # TODO: Possible error: Does the bias tensor have the correct shape -> should be 1D-Array of values 
+        self.weights = np.vstack(self.weights, bias)
