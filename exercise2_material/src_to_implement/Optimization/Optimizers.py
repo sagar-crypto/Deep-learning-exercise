@@ -18,7 +18,7 @@ class SgdWithMomentum:
 
     def calculate_update(self, weight_tensor, gradient_tensor):
         self.previous_velocity = self.velocity
-        if not self.previous_velocity:  # if the previous velocity is not there
+        if self.previous_velocity == []:  # if the previous velocity is not there
             self.velocity = -self.learning_rate * gradient_tensor
         else:
             self.velocity = self.previous_velocity * self.momentum_rate - self.learning_rate * gradient_tensor  # just implementing the formula
@@ -48,12 +48,12 @@ class Adam:
         self.prev_velocity = self.velocity
         self.k += 1
 
-        if not self.prev_velocity:
+        if self.prev_velocity == []:
             self.velocity = (1 - self.mu) * self.g
         else:
             self.velocity = self.prev_velocity * self.mu + (1 - self.mu) * self.g
 
-        if not self.prev_rk:
+        if self.prev_rk == []:
             self.rk = (1 - self.rho) * np.multiply(self.g, self.g)
         else:
             self.rk = self.rho * self.prev_rk + (1 - self.rho) * np.multiply(self.g, self.g)

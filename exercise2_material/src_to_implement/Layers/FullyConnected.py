@@ -66,10 +66,7 @@ class FullyConnected(Base.BaseLayer):
     
     
     def initialize(self, weights_initializer, bias_initializer):
-        self.weights = weights_initializer
-        bias = bias_initializer
-        
-        # Adding the bias to the weights matrix as required by the task
-        # TODO: Possible error: Are the weights added in the right dimension (horizontally/vertically)?
-        # TODO: Possible error: Does the bias tensor have the correct shape -> should be 1D-Array of values 
-        self.weights = np.vstack(self.weights, bias)
+        init_weights = weights_initializer.initialize([self.input_size, self.output_size], self.input_size,
+                                                      self.output_size)  # initialise with shape, fan_in, fan_out
+        init_bias = bias_initializer.initialize([1, self.output_size], 1, 1)  # TODO Understand it
+        self.weights = np.concatenate((init_weights, init_bias), axis=0)

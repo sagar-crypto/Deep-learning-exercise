@@ -10,6 +10,8 @@ class NeuralNetwork:
         self.predicted_input = None
         self.input_tensor = None
         self.optimizer = optimizer
+        self.weights_initializer = weights_initializer
+        self.bias_initializer = bias_initializer
         self.loss = []
         self.layers = []
         self.data_layer = None
@@ -36,8 +38,11 @@ class NeuralNetwork:
 
     def append_layer(self, layer):
         if layer.trainable:
-            if((self.weights_initializer is not None) and (self.bias_initializer is not None)):
-                layer.initialize(self.weights_initializer, self.bias_initializer)
+
+            layer.initialize(self.weights_initializer, self.bias_initializer)
+            layer.weights_initializer = (copy.deepcopy(self.weights_initializer))
+            layer.bias_initializer = (copy.deepcopy(self.bias_initializer))
+            layer.initialize(self.weights_initializer, self.bias_initializer)
             layer.optimizer = (copy.deepcopy(self.optimizer))
         self.layers.append(layer)
 
