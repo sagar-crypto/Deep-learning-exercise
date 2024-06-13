@@ -1,6 +1,5 @@
 import copy
 
-
 class NeuralNetwork:
     def __init__(self, optimizer):
         self.iterations = None
@@ -14,6 +13,7 @@ class NeuralNetwork:
         self.layers = []
         self.data_layer = None
         self.loss_layer = None
+
 
     def forward(self):
         self.input_tensor, self.label_tensor = self.data_layer.next()

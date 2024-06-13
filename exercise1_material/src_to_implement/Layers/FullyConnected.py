@@ -13,7 +13,6 @@ class FullyConnected(Base.BaseLayer):
         self._optimizer = None
         self.current_input = None
         
-        
     def forward(self, input_tensor):
         # Shape input_tensor: (rows: batch_size, columns: input_size)
         # Shape weights: (rows: inputs, columns: outputs)
@@ -64,3 +63,4 @@ class FullyConnected(Base.BaseLayer):
         
         # Removing the additional colummn used for the bias
         return grad_X[:,:-1]
+    
