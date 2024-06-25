@@ -23,4 +23,4 @@ class L1_Regularizer:
     def norm(self,weights):
         # ord = 1 is equal to max(sum(abs(x), axis=0)) which is the L1 norm
         # Adding axis = 1 to sum along an axis, as its a matrix
-        return self.alpha * np.linalg.norm(weights, ord = 1, axis = 1) 
+        return self.alpha * np.sum(np.linalg.norm(weights, ord = 1, axis = 1)) 

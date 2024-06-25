@@ -20,26 +20,28 @@ class Sgd(Optimizer):
             
         return weight_tensor - self.learning_rate * gradient_tensor
 
+# Only tried to fix the errors with SGDwithmomentum for the start
+# Because its the same issue for Adam
 
 class SgdWithMomentum(Optimizer):
     def __init__(self, learning_rate, momentum_rate):
         super().__init__()
         self.learning_rate = learning_rate
         self.momentum_rate = momentum_rate
-        self.velocity = []  # the current velocity
-        self.previous_velocity = []  # the previous velocity to calculate the current velocity
+        self.velocity = np.array([])  # the current velocity
+        self.previous_velocity = np.array([])  # the previous velocity to calculate the current velocity
 
     def calculate_update(self, weight_tensor, gradient_tensor):
 
         self.previous_velocity = self.velocity
-        if self.previous_velocity == []:  # if the previous velocity is not there
+        if self.previous_velocity is None:  # if the previous velocity is not there
             self.velocity = -self.learning_rate * gradient_tensor
         else:
             self.velocity = self.previous_velocity * self.momentum_rate - self.learning_rate * gradient_tensor  # just implementing the formula
 
         # If a regularizer is set, add it to the loss term with a negative sign 
         if self.regularizer:
-            continuation_weight_tensor = weight_tensor - self.learning_rate * self.regularizer.calculate_gradient(weight_tensor) + self.velocity
+            continuation_weight_tensor = weight_tensor + self.velocity - self.learning_rate * self.regularizer.calculate_gradient(weight_tensor)
         else:
             continuation_weight_tensor = weight_tensor + self.velocity
             
