@@ -28,13 +28,13 @@ class SgdWithMomentum(Optimizer):
         super().__init__()
         self.learning_rate = learning_rate
         self.momentum_rate = momentum_rate
-        self.velocity = np.array([])  # the current velocity
-        self.previous_velocity = np.array([])  # the previous velocity to calculate the current velocity
+        self.velocity = np.array([])   # the current velocity
+        self.previous_velocity = np.array([])   # the previous velocity to calculate the current velocity
 
     def calculate_update(self, weight_tensor, gradient_tensor):
 
         self.previous_velocity = self.velocity
-        if self.previous_velocity is None:  # if the previous velocity is not there
+        if not self.previous_velocity.any():  # if the previous velocity is not there
             self.velocity = -self.learning_rate * gradient_tensor
         else:
             self.velocity = self.previous_velocity * self.momentum_rate - self.learning_rate * gradient_tensor  # just implementing the formula
@@ -51,17 +51,17 @@ class SgdWithMomentum(Optimizer):
 class Adam(Optimizer):
     def __init__(self, learning_rate, mu, rho):
         super().__init__()
-        self.rk_currected = []
-        self.velocity_currected = []
+        self.rk_currected = np.array([])
+        self.velocity_currected = np.array([])
         self.k = 0
-        self.prev_rk = []
-        self.prev_velocity = []
-        self.velocity = []
-        self.g = []
+        self.prev_rk = np.array([])
+        self.prev_velocity = np.array([])
+        self.velocity = np.array([])
+        self.g = np.array([])
         self.learning_rate = learning_rate
         self.mu = mu
         self.rho = rho
-        self.rk = []
+        self.rk = np.array([])
         self.epsilon = np.finfo(float).eps
 
     def calculate_update(self, weight_tensor, gradient_tensor):
@@ -70,12 +70,12 @@ class Adam(Optimizer):
         self.prev_velocity = self.velocity
         self.k += 1
 
-        if self.prev_velocity == []:
+        if not self.prev_velocity.any():
             self.velocity = (1 - self.mu) * self.g
         else:
             self.velocity = self.prev_velocity * self.mu + (1 - self.mu) * self.g
 
-        if self.prev_rk == []:
+        if not self.prev_rk.any():
             self.rk = (1 - self.rho) * np.multiply(self.g, self.g)
         else:
             self.rk = self.rho * self.prev_rk + (1 - self.rho) * np.multiply(self.g, self.g)
@@ -86,8 +86,8 @@ class Adam(Optimizer):
         # If a regularizer is set, add it to the loss term with a negative sign 
         if self.regularizer:
             return weight_tensor - self.learning_rate * self.velocity_currected / (
-                    np.sqrt(self.rk_currected) + self.epsilon)
+                    np.sqrt(self.rk_currected) + self.epsilon) - self.learning_rate * self.regularizer.calculate_gradient(weight_tensor)
         else:
             return weight_tensor - self.learning_rate * self.velocity_currected / (
-                    np.sqrt(self.rk_currected) + self.epsilon) - self.learning_rate * self.regularizer.calculate_gradient(weight_tensor)
+                    np.sqrt(self.rk_currected) + self.epsilon) 
 
