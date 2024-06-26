@@ -58,8 +58,6 @@ class FullyConnected(Base.BaseLayer):
         
         if self._optimizer:
             self.weights = self._optimizer.calculate_update(self.weights, self._gradient_weights)
-        else:
-            print("No Optimizer is set!")
         
         # Removing the additional colummn used for the bias
         return grad_X[:,:-1]

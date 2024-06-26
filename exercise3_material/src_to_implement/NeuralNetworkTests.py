@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import os
 import argparse
 import tabulate
+from Layers import BatchNormalization
+
 
 ID = 3  # identifier for dispatcher
 

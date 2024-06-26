@@ -4,13 +4,13 @@ import random as rd
 
 class Dropout:
     def __init__(self, probability):
-        self.error_tensor = []
-        self.back_output_tensor = []
+        self.error_tensor = np.array([])
+        self.back_output_tensor = np.array([])
         self.neuron_survival_probability = probability
-        self.survived_neurons = []
+        self.survived_neurons = np.array([])
         self.trainable = False
         self.testing_phase = False
-        self.output_tensor_dropout = []
+        self.output_tensor_dropout = np.array([])
 
     def forward(self, input_tensor):
         self.output_tensor_dropout = np.copy(input_tensor)  # does not work if not using copy
