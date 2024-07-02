@@ -1,77 +1,106 @@
+import enum
+from queue import Full
 import numpy as np
-from . Base import BaseLayer
-from . FullyConnected import FullyConnected
-from . TanH import TanH
-from . Sigmoid import Sigmoid
+from .TanH import TanH
+from .Sigmoid import Sigmoid
+from .Base import BaseLayer
+from .FullyConnected import FullyConnected
 from copy import deepcopy
 
 class RNN(BaseLayer):
     def __init__(self, input_size, hidden_size, output_size):
+        """Recurrent neural network based on elman cell
+
+        :param input_size:
+        :param hidden_size:
+        :param output_size:
+        """
         super().__init__()
         self.trainable = True
+
         self.input_size = input_size
         self.hidden_size = hidden_size
         self.output_size = output_size
-                
-        self.memorize = False
-        self.prev_hidden_state = None
-        
-        # Initialize the hidden state and the output state  
-        # Input size of hidden state is the size of the input and of the previous hidden state (same size as current hidden state)
-        self.hidden_layer = FullyConnected((self.input_size+self.hidden_size),self.hidden_size)
-        # Initialze the hidden states with all zeros (+1 as the bias is included in the weights)
-        self.hidden_layer.weights = np.zeros((self.input_size+self.hidden_size +1, self.hidden_size))
-        
-        self.output_layer = FullyConnected(self.hidden_size, self.output_size)
 
+        self.forward_first_time = True
+        self._memorize = False
 
-        # Initialize the tanh and Sigmoid laywers
-        self.tanh_layer = TanH()
+        # Concatenation size for layer initialization
+        # We don't need to add one because that's done in fully connected layers?
+        self.conc_size = input_size + hidden_size
+
+        # Initialize the layers
+        # Two fully connected layers, one for hidden state and another for output
+        self.hidden_layer = FullyConnected(self.conc_size, hidden_size)
+        self.output_layer = FullyConnected(hidden_size, output_size)
+        self.tanH_layer = TanH()
         self.sigmoid_layer = Sigmoid()
-        
-    
-    def forward(self,input_tensor):
-        self.first_iteration = True
+
+        # Init optimizers
+        self.optimizer_hidden = None
+        self.optimizer_output = None
+
+        # Initialize the weights (This weight is for the hidden layer with tanh function)
+        # self._weights = np.zeros((self.conc_size + 1, self.hidden_size))
+        self._gradient_weights = np.zeros((self.conc_size + 1, self.hidden_size))
+        self.gradient_output = np.zeros_like(self.output_layer.weights)
+
+
+    def forward(self, input_tensor):
+        """RNN forward pass.
+
+        :param input_tensor: Output tensor from the lower layer
+        :return: The input tensor for the next layer
+        """
+        self.hidden_layer_inputs = []
+        self.output_layer_inputs = []
         self.input_tensor = input_tensor
+
         self.batch_size = input_tensor.shape[0]
 
-        if self.first_iteration:
-            if self.memorize:
-                self.hidden_state = self.prev_hidden_state
-                # temp = self.prev_hidden_state
-                # self.hidden_state = np.zeros((self.batch_size, self.hidden_size))
-                # self.hidden_state[0, :] = temp[-1, :]
-            else:
-                self.hidden_state = np.zeros(shape=(self.batch_size, self.hidden_size))
-            self.first_iteration = False
-            
-        # The states of a single sequence
+        self.sigmoids = np.zeros((self.batch_size, self.output_size))
+        self.tanHs = np.zeros((self.batch_size, self.hidden_size))
+        self.prev_input = input_tensor
+
+        # States of a single sequence
         self.forward_output = np.zeros((self.batch_size, self.output_size))
-        
-        
+
+        # If this is the first time calling forward, initiate previous hidden state as zeros
+        if self.forward_first_time:
+            self.prev_hidden_state = np.zeros((self.batch_size, self.hidden_size))
+            self.forward_first_time = False
+
+        # Initialize the hidden layer as zeros if memorize is false, and restore previous if true
+        if self._memorize:
+            temp = self.prev_hidden_state
+            self.hidden_state = np.zeros((self.batch_size, self.hidden_size))
+            self.hidden_state[0, :] = temp[-1, :]
+        else:
+            self.hidden_state = np.zeros((self.batch_size, self.hidden_size))
+
+        # Hidden state is calculated using fully connected layer (hidden_layer)
         for i, sequence in enumerate(input_tensor):
-            
-            if i !=0 :
-                # Pass hidden state from previous TIME STEP (=sequence) to current hidden state
-                self.hidden_state_prev_call = self.hidden_state[i-1].reshape((1, -1))
-            else:
-                self.hidden_state_prev_call = self.hidden_state
-                
-            # Concatenate hidden state from prev TS and the sequence input 
-            #TODO Here the concatenation might cause the error!
-            conc_hidden_input = np.concatenate((sequence.reshape((1,-1)),self.hidden_state_prev_call.reshape((1,-1))), axis=1)
-            self.hidden_state[i] = self.tanh_layer.forward(self.hidden_layer.forward(conc_hidden_input))
-      
-            self.forward_output[i] = self.output_layer.forward(self.sigmoid_layer.forward(self.hidden_state[i].reshape(1,-1) ))
-  
-            
-        # Storing the hidden state for the whole current iteration (not just one sequence) for
-        # possible use in next forward iteration
+
+            if i != 0:
+                self.hidden_state[i] = hidden_state_minus
+
+            intermediate = np.concatenate((sequence.reshape((1, -1)), self.hidden_state[i].reshape((1, -1))), axis=1)
+            self.hidden_state[i] = self.tanH_layer.forward(self.hidden_layer.forward(intermediate))
+            self.hidden_layer_inputs.append(self.hidden_layer.recent_input)
+            hidden_state_minus = self.hidden_state[i].reshape((1, -1))
+
+            # Output is calculated using fully connected layer (output_layer)
+            self.forward_output[i] = self.sigmoid_layer.forward(
+                self.output_layer.forward(self.hidden_state[i].reshape(1, -1)))
+
+            self.output_layer_inputs.append(self.output_layer.recent_input)
+
+            self.sigmoids[i] = self.sigmoid_layer.prev_tensor
+            self.tanHs[i] = self.tanH_layer.prev_tensor
+
         self.prev_hidden_state = self.hidden_state
-        
-        return self.forward_output                             
-                                         
-                  
+        return self.forward_output
+
     def backward(self, error_tensor):
         """ RNN backward pass
 
@@ -108,7 +137,7 @@ class RNN(BaseLayer):
             self._gradient_weights += self.hidden_layer.gradient_weights
 
             self.input_gradient[it], hidden_state_gradient, _ = np.split(gradient_of_hidden_layer,
-                                                                            [self.input_size,
+                                                                           [self.input_size,
                                                                             self.input_size + self.hidden_size], axis=1)
 
         self.hidden_layer.gradient_weights = self._gradient_weights
@@ -135,18 +164,14 @@ class RNN(BaseLayer):
         self.hidden_layer.initialize(weights_initializer, bias_initializer)
         self.output_layer.initialize(weights_initializer, bias_initializer)
 
-                                         
-                                         
-
     @property
     def memorize(self):
         return self._memorize
-    
+
     @memorize.setter
-    def memorize(self,bool_value):
-        self._memorize = bool_value
-        
-        
+    def memorize(self, value):
+        self._memorize = value
+
     @property
     def gradient_weights(self):
         return self.hidden_layer.gradient_weights
